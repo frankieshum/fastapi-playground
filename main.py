@@ -20,7 +20,7 @@ db = CompaniesDb(db=Redis(
 app = FastAPI()       
 
 @app.get('/companies')
-async def get_companies():
+def get_companies():
     return [
         CompanyResponse(**db_company.dict())
         for db_company
@@ -35,7 +35,7 @@ async def get_company_by_id(company_id: str):
     return CompanyResponse(**db_company.dict())
 
 @app.post('/companies', status_code=status.HTTP_201_CREATED)
-async def create_company(company: CreateCompanyRequest):
+def create_company(company: CreateCompanyRequest):
     db_company = Company(
         company_id=str(uuid.uuid4()),
         name=company.name,
@@ -47,7 +47,7 @@ async def create_company(company: CreateCompanyRequest):
     return CompanyResponse(**db_response.dict())
 
 @app.put('/companies/{company_id}', status_code=status.HTTP_201_CREATED)
-async def update_company(company_id: str, company: UpdateCompanyRequest):
+def update_company(company_id: str, company: UpdateCompanyRequest):
     db_company = Company(
         company_id=company_id,
         name=company.name,
@@ -59,11 +59,11 @@ async def update_company(company_id: str, company: UpdateCompanyRequest):
     return CompanyResponse(**db_response.dict())
 
 @app.delete('/companies/{company_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_company(company_id: str):
+def delete_company(company_id: str):
     db.delete_company(company_id)
 
 @app.middleware('http')
-async def format_server_errors(request: Request, call_next):
+def format_server_errors(request: Request, call_next):
     try:
         response = await call_next(request)
         return response
