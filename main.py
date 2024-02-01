@@ -20,7 +20,7 @@ db = CompaniesDb(db=Redis(
 app = FastAPI()       
 
 @app.get('/companies')
-def get_companies(industry: str | None = None):
+def get_companies(industry: str | None = None) -> list[CompanyResponse]:
     companies = []
     for db_company in db.get_all_companies():
         if industry and db_company.industry.lower() != industry.lower():
@@ -29,14 +29,14 @@ def get_companies(industry: str | None = None):
     return companies
 
 @app.get('/companies/{company_id}')
-def get_company_by_id(company_id: str):
+def get_company_by_id(company_id: str) -> CompanyResponse:
     db_company = db.get_company_by_id(company_id)
     if not db_company:
         raise HTTPException(status_code=404, detail=f'Company with ID "{company_id}" not found')
     return CompanyResponse(**db_company.dict())
 
 @app.post('/companies', status_code=status.HTTP_201_CREATED)
-def create_company(company: CreateCompanyRequest):
+def create_company(company: CreateCompanyRequest) -> CompanyResponse:
     db_company = Company(
         company_id=str(uuid.uuid4()),
         name=company.name,
@@ -48,7 +48,7 @@ def create_company(company: CreateCompanyRequest):
     return CompanyResponse(**db_response.dict())
 
 @app.put('/companies/{company_id}', status_code=status.HTTP_201_CREATED)
-def update_company(company_id: str, company: UpdateCompanyRequest):
+def update_company(company_id: str, company: UpdateCompanyRequest) -> CompanyResponse:
     db_company = Company(
         company_id=company_id,
         name=company.name,
