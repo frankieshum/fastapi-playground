@@ -20,15 +20,16 @@ db = CompaniesDb(db=Redis(
 app = FastAPI()       
 
 @app.get('/companies')
-def get_companies():
-    return [
-        CompanyResponse(**db_company.dict())
-        for db_company
-        in db.get_all_companies()
-    ]
+def get_companies(industry: str | None = None):
+    companies = []
+    for db_company in db.get_all_companies():
+        if industry and db_company.industry.lower() != industry.lower():
+            continue
+        companies.append(CompanyResponse(**db_company.dict()))
+    return companies
 
 @app.get('/companies/{company_id}')
-async def get_company_by_id(company_id: str):
+def get_company_by_id(company_id: str):
     db_company = db.get_company_by_id(company_id)
     if not db_company:
         raise HTTPException(status_code=404, detail=f'Company with ID "{company_id}" not found')
@@ -65,7 +66,7 @@ def delete_company(company_id: str):
 @app.middleware('http')
 def format_server_errors(request: Request, call_next):
     try:
-        response = await call_next(request)
+        response = call_next(request)
         return response
     except HTTPException:
         raise
